@@ -1,4 +1,3 @@
-```javascript
 export default {
     data() {
         return {
@@ -37,7 +36,7 @@ export default {
                                       productSku.includes(this.searchQuery.toLowerCase());
                 
                 const matchesCategory = this.selectedCategory === '' || 
-                                        categoryName === this.selectedCategory;
+                                       categoryName === this.selectedCategory;
                 
                 const matchesStatus = this.statusFilter === '' || 
                                      (this.statusFilter === 'kritis' && Number(product.stock) <= 20);
@@ -163,9 +162,7 @@ export default {
                                         <tr v-for="product in paginatedProducts" :key="product.id" class="hover:bg-gray-800/30 transition">
                                             <td class="p-4 font-mono text-blue-400 font-bold">{{ product.sku }}</td>
                                             <td class="p-4 font-bold text-white text-sm">{{ product.product_name }}</td>
-                                            <td class="p-4">
-                                                <span class="bg-gray-950 border border-gray-800 px-2.5 py-1 rounded text-[10px] text-gray-400 uppercase font-mono">{{ product.category_name || 'ELEKTRONIK' }}</span>
-                                            </td>
+                                            <td class="p-4"><span class="bg-gray-950 border border-gray-800 px-2.5 py-1 rounded text-[10px] text-gray-400 uppercase font-mono">{{ product.category_name || 'ELEKTRONIK' }}</span></td>
                                             <td class="p-4">
                                                 <div class="flex items-center gap-2">
                                                     <span class="font-bold font-mono" :class="Number(product.stock) <= 20 ? 'text-amber-400' : 'text-white'">{{ product.stock }} Buah</span>
@@ -194,7 +191,7 @@ export default {
                         <div>
                             <h3 class="text-xs font-bold uppercase tracking-wider text-gray-300 pb-3 border-b border-gray-800 mb-4">Log Sistem Langsung</h3>
                             <div class="space-y-3 font-mono text-[10px] text-gray-400">
-                                <div v-for="(log, idx) in logs" :key="idx" class="p-2 bg-gray-950/40 border-l-2 rounded-r" :class="log.type === 'error' ? 'border-red-500' : 'border-blue-500'">
+                                <div v-for="(log, idx) in logs" :key="idx" class="p-2 bg-gray-950/40 border-l-2 rounded-r border-blue-500">
                                     <span class="text-gray-500 block text-[9px]">{{ log.time }}</span>
                                     <span class="text-gray-300">{{ log.message }}</span>
                                 </div>
@@ -213,5 +210,3 @@ export default {
         </div>
     `
 };
-
-```
