@@ -27,7 +27,7 @@ export default {
                 <div class="bg-gray-900 border border-gray-800 p-5 rounded-xl">
                     <span class="text-[10px] uppercase font-bold text-gray-400 tracking-wider block text-left">Total Kategori Sektor</span>
                     <div class="text-2xl font-black text-purple-400 font-mono mt-1 text-left">{{ categories.length }} <span class="text-xs text-gray-500 font-sans font-normal">Sektor</span></div>
-                    <span class="text-[10px] text-gray-400 block mt-2 text-left">Terintegrasi dalam database relasional</span>
+                    <span class="text-[10px] text-gray-400 block mt-2 text-left">Terintegrasi dalam database lokal</span>
                 </div>
             </div>
 
@@ -43,7 +43,7 @@ export default {
                     <select v-model="filterStockStatus" class="bg-gray-950 border border-gray-800 rounded-lg p-2.5 text-white focus:outline-none focus:border-blue-500">
                         <option value="">-- Semua Status Stok --</option>
                         <option value="aman">Stok Aman (> 20 Buah)</option>
-                        <option value="kritis">Stok Kritis (&le; 20 Buah)</option>
+                        <option value="kritis">Stok Kritis (<= 20 Buah)</option>
                     </select>
                     <button @click="resetFilters" class="bg-gray-800 hover:bg-gray-700 text-white px-4 py-2.5 rounded-lg font-semibold transition">Reset</button>
                 </div>
@@ -113,17 +113,14 @@ export default {
                                 <option v-for="cat in categories" :key="cat.id" :value="cat.id">{{ cat.category_name }}</option>
                             </select>
                         </div>
-
                         <div>
                             <label class="block text-[10px] font-bold uppercase text-gray-400 mb-1 tracking-wider">Nama Produk</label>
                             <input v-model="form.product_name" type="text" required class="w-full bg-gray-950 border border-gray-800 rounded-lg p-2.5 text-white focus:outline-none focus:border-blue-500">
                         </div>
-
                         <div>
                             <label class="block text-[10px] font-bold uppercase text-gray-400 mb-1 tracking-wider">SKU Barang</label>
                             <input v-model="form.sku" type="text" required class="w-full bg-gray-950 border border-gray-800 rounded-lg p-2.5 text-white focus:outline-none focus:border-blue-500 font-mono">
                         </div>
-
                         <div class="grid grid-cols-2 gap-4">
                             <div>
                                 <label class="block text-[10px] font-bold uppercase text-gray-400 mb-1 tracking-wider">Jumlah Stok</label>
@@ -134,12 +131,10 @@ export default {
                                 <input v-model="form.price" type="number" required class="w-full bg-gray-950 border border-gray-800 rounded-lg p-2.5 text-white focus:outline-none focus:border-blue-500 font-mono">
                             </div>
                         </div>
-
                         <div>
                             <label class="block text-[10px] font-bold uppercase text-gray-400 mb-1 tracking-wider">Nama Pemasok</label>
                             <input v-model="form.supplier_name" type="text" required class="w-full bg-gray-950 border border-gray-800 rounded-lg p-2.5 text-white focus:outline-none focus:border-blue-500">
                         </div>
-
                         <div class="flex justify-end space-x-3 pt-4 border-t border-gray-800">
                             <button type="button" @click="showModal = false" class="bg-gray-800 hover:bg-gray-700 text-gray-200 px-4 py-2 rounded-lg font-medium transition">Batal</button>
                             <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-lg font-semibold transition shadow-md">Simpan</button>
@@ -152,7 +147,11 @@ export default {
     data() {
         return { 
             products: [], 
-            categories: [],
+            categories: [
+                { id: 1, category_name: 'ELEKTRONIK' },
+                { id: 2, category_name: 'OFFICE' },
+                { id: 3, category_name: 'PERKAKAS' }
+            ],
             searchQuery: '',
             filterCategory: '',
             filterStockStatus: '',
@@ -160,33 +159,25 @@ export default {
             modalMode: 'add',
             currentId: null,
             form: { category_id: '', product_name: '', sku: '', stock: '', price: '', supplier_name: '' },
-            totalAdminStock: 0,
-            totalAdminAsset: 0,
             currentPage: 1,
             itemsPerPage: 5
         }
     },
     computed: {
+        totalAdminStock() { return this.products.reduce((sum, item) => sum + Number(item.stock || 0), 0); },
+        totalAdminAsset() { return this.products.reduce((sum, item) => sum + (Number(item.price || 0) * Number(item.stock || 0)), 0); },
         filteredProducts() {
             return this.products.filter(product => {
-                const productName = product.product_name ? product.product_name.toLowerCase() : '';
-                const productSku = product.sku ? product.sku.toLowerCase() : '';
-                
-                const matchesSearch = productName.includes(this.searchQuery.toLowerCase()) || 
-                                      productSku.includes(this.searchQuery.toLowerCase());
-                                      
+                const search = this.searchQuery.toLowerCase();
+                const matchesSearch = product.product_name.toLowerCase().includes(search) || product.sku.toLowerCase().includes(search);
                 const matchesCategory = this.filterCategory === '' || product.category_name === this.filterCategory;
-                
                 let matchesStock = true;
                 if (this.filterStockStatus === 'aman') matchesStock = Number(product.stock) > 20;
                 if (this.filterStockStatus === 'kritis') matchesStock = Number(product.stock) <= 20;
-
                 return matchesSearch && matchesCategory && matchesStock;
             });
         },
-        totalPages() {
-            return Math.ceil(this.filteredProducts.length / this.itemsPerPage);
-        },
+        totalPages() { return Math.ceil(this.filteredProducts.length / this.itemsPerPage) || 1; },
         paginatedProducts() {
             const start = (this.currentPage - 1) * this.itemsPerPage;
             return this.filteredProducts.slice(start, start + this.itemsPerPage);
@@ -199,96 +190,59 @@ export default {
     },
     created() {
         this.fetchProducts();
-        this.fetchCategories();
     },
     methods: {
-        async fetchProducts() {
-            try {
-                const response = await axios.get('api/products');
-                let rawData = response.data;
-                if (rawData && rawData.data && Array.isArray(rawData.data)) {
-                    rawData = rawData.data;
-                }
-                this.products = Array.isArray(rawData) ? rawData : [];
-                this.calculateAdminStats();
-            } catch (err) {
-                console.error('Gagal memuat data produk:', err);
+        fetchProducts() {
+            const saved = localStorage.getItem('inventory_data');
+            this.products = saved ? JSON.parse(saved) : [];
+        },
+        saveToLocalStorage() {
+            localStorage.setItem('inventory_data', JSON.stringify(this.products));
+        },
+        submitForm() {
+            const categoryObj = this.categories.find(c => c.id == this.form.category_id);
+            
+            if (this.modalMode === 'add') {
+                const newProduct = {
+                    ...this.form,
+                    id: Date.now(),
+                    category_name: categoryObj.category_name
+                };
+                this.products.push(newProduct);
+                alert('Barang berhasil ditambahkan!');
+            } else {
+                const index = this.products.findIndex(p => p.id === this.currentId);
+                this.products.splice(index, 1, {
+                    ...this.form,
+                    id: this.currentId,
+                    category_name: categoryObj.category_name
+                });
+                alert('Data barang berhasil diperbarui!');
             }
+            this.saveToLocalStorage();
+            this.showModal = false;
         },
-        async fetchCategories() {
-            try {
-                const response = await axios.get('api/categories');
-                let rawData = response.data;
-                if (rawData && rawData.data && Array.isArray(rawData.data)) {
-                    rawData = rawData.data;
-                }
-                this.categories = Array.isArray(rawData) ? rawData : [];
-            } catch (err) {
-                console.error('Gagal memuat data kategori:', err);
+        deleteProduct(id) {
+            if (confirm('Apakah Anda yakin ingin menghapus data komoditas barang ini?')) {
+                this.products = this.products.filter(p => p.id !== id);
+                this.saveToLocalStorage();
             }
-        },
-        calculateAdminStats() {
-            this.totalAdminStock = this.products.reduce((sum, item) => sum + Number(item.stock || 0), 0);
-            this.totalAdminAsset = this.products.reduce((sum, item) => sum + (Number(item.price || 0) * Number(item.stock || 0)), 0);
-        },
-        resetFilters() {
-            this.searchQuery = '';
-            this.filterCategory = '';
-            this.filterStockStatus = '';
         },
         openModal(mode, product = null) {
             this.modalMode = mode;
             this.showModal = true;
             if (mode === 'edit' && product) {
                 this.currentId = product.id;
-                this.form = { 
-                    category_id: product.category_id,
-                    product_name: product.product_name,
-                    sku: product.sku,
-                    stock: product.stock,
-                    price: product.price,
-                    supplier_name: product.supplier_name
-                };
+                this.form = { ...product };
             } else {
                 this.currentId = null;
                 this.form = { category_id: '', product_name: '', sku: '', stock: '', price: '', supplier_name: '' };
             }
         },
-        async submitForm() {
-            try {
-                const payload = {
-                    category_id: this.form.category_id,
-                    product_name: this.form.product_name,
-                    sku: this.form.sku,
-                    stock: this.form.stock,
-                    price: this.form.price,
-                    supplier_name: this.form.supplier_name
-                };
-
-                if (this.modalMode === 'add') {
-                    // Murni JSON post biasa
-                    await axios.post('api/products', payload);
-                    alert('Barang berhasil ditambahkan!');
-                } else {
-                    // Murni JSON put biasa untuk proses edit
-                    await axios.put(`api/products/${this.currentId}`, payload);
-                    alert('Data barang berhasil diperbarui!');
-                }
-                this.showModal = false;
-                this.fetchProducts();
-            } catch (err) {
-                alert('Gagal mengeksekusi operasi data master.');
-            }
-        },
-        async deleteProduct(id) {
-            if (confirm('Apakah Anda yakin ingin menghapus data komoditas barang ini?')) {
-                try {
-                    await axios.delete(`api/products/${id}`);
-                    this.fetchProducts();
-                } catch (err) {
-                    alert('Gagal menghapus barang.');
-                }
-            }
+        resetFilters() {
+            this.searchQuery = '';
+            this.filterCategory = '';
+            this.filterStockStatus = '';
         }
     }
 };
