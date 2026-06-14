@@ -2,7 +2,8 @@ import Home from './components/Home.js';
 import Login from './components/Login.js';
 import Dashboard from './components/Dashboard.js';
 
-axios.defaults.baseURL = 'http://localhost/UAS_Web2_312410312_DzakiArifRahman/backend-api/public/index.php/';
+// Catatan: Karena Anda beralih ke Local Storage, 
+// axios.defaults.baseURL tidak lagi diperlukan untuk autentikasi.
 
 const routes = [
     { path: '/', component: Home },
@@ -15,34 +16,24 @@ const router = VueRouter.createRouter({
     routes
 });
 
+// Navigation Guard: Memeriksa apakah user sudah login di Local Storage
 router.beforeEach((to, from, next) => {
     const isAuthenticated = localStorage.getItem('isLoggedIn') === 'true';
+    
     if (to.meta.requiresAuth && !isAuthenticated) {
+        // Jika belum login dan ingin ke dashboard, arahkan ke login
         next('/login');
+    } else if (to.path === '/login' && isAuthenticated) {
+        // Jika sudah login dan ingin ke halaman login, arahkan ke dashboard
+        next('/dashboard');
     } else {
         next();
     }
 });
 
-axios.interceptors.request.use(config => {
-    const token = localStorage.getItem('token');
-    if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-});
-
-axios.interceptors.response.use(
-    response => response,
-    error => {
-        if (error.response && error.response.status === 401) {
-            alert('Sesi Anda telah habis! Silakan login kembali.');
-            localStorage.clear();
-            router.push('/login');
-        }
-        return Promise.reject(error);
-    }
-);
+// Interceptor dihapus karena Anda tidak lagi menggunakan token berbasis API.
+// Jika di masa depan Anda tetap butuh axios untuk fetch data, 
+// cukup gunakan instansi axios biasa tanpa interceptor autentikasi.
 
 const app = Vue.createApp({});
 app.use(router);
