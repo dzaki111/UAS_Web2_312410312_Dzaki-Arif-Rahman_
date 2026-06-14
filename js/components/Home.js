@@ -1,5 +1,3 @@
-Berikut adalah kode lengkap dengan integrasi `localStorage` yang menggantikan fungsi API sebelumnya. Kode ini sudah mencakup logika inisialisasi data, penyimpanan, dan struktur template Vue yang Anda minta (tanpa mengubah desain atau fitur):
-
 ```javascript
 export default {
     data() {
