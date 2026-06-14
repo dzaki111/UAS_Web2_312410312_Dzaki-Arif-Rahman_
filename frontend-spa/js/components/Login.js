@@ -26,25 +26,29 @@ export default {
         </div>
     `,
     data() {
-        return { username: '', password: '', error: null, loading: false }
+        return { 
+            username: '', 
+            password: '', 
+            error: null, 
+            loading: false 
+        }
     },
     methods: {
         async handleLogin() {
             this.loading = true;
             this.error = null;
-            try {
-                const response = await axios.post('api/login', {
-                    username: this.username,
-                    password: this.password
-                });
-                if (response.data.token) {
-                    localStorage.setItem('token', response.data.token);
-                    localStorage.setItem('isLoggedIn', 'true');
-                    this.$router.push('/dashboard');
-                }
-            } catch (err) {
-                this.error = err.response?.data?.messages || 'Login gagal, periksa akun Anda.';
-            } finally {
+
+            // Simulasi delay network
+            await new Promise(resolve => setTimeout(resolve, 800));
+
+            // Logika validasi statis dengan localStorage
+            if (this.username === 'admin' && this.password === 'admin123') {
+                localStorage.setItem('isLoggedIn', 'true');
+                localStorage.setItem('user', 'admin');
+                
+                this.$router.push('/dashboard');
+            } else {
+                this.error = 'Username atau password salah.';
                 this.loading = false;
             }
         }
