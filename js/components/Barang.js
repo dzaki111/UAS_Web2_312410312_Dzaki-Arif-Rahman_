@@ -201,7 +201,6 @@ export default {
         },
         submitForm() {
             const categoryObj = this.categories.find(c => c.id == this.form.category_id);
-            
             if (this.modalMode === 'add') {
                 const newProduct = {
                     ...this.form,
@@ -209,7 +208,6 @@ export default {
                     category_name: categoryObj.category_name
                 };
                 this.products.push(newProduct);
-                alert('Barang berhasil ditambahkan!');
             } else {
                 const index = this.products.findIndex(p => p.id === this.currentId);
                 this.products.splice(index, 1, {
@@ -217,7 +215,6 @@ export default {
                     id: this.currentId,
                     category_name: categoryObj.category_name
                 });
-                alert('Data barang berhasil diperbarui!');
             }
             this.saveToLocalStorage();
             this.showModal = false;
