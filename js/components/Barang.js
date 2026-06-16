@@ -89,9 +89,8 @@ export default {
                         </tbody>
                     </table>
                 </div>
-
                 <div class="bg-gray-950/40 px-4 py-3 border-t border-gray-800 text-gray-500 flex justify-between items-center text-[11px]">
-                    <span>Menampilkan {{ paginatedProducts.length }} dari {{ filteredProducts.length }} data (Total: {{ products.length }})</span>
+                    <span>Menampilkan {{ paginatedProducts.length }} dari {{ filteredProducts.length }} data</span>
                     <div class="flex gap-1">
                         <button @click="currentPage--" :disabled="currentPage === 1" class="px-2 py-1 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded disabled:opacity-30 transition">Prev</button>
                         <span class="px-2.5 py-1 bg-gray-950 rounded text-blue-400 font-mono font-bold">{{ currentPage }} / {{ totalPages || 1 }}</span>
@@ -194,7 +193,24 @@ export default {
     methods: {
         fetchProducts() {
             const saved = localStorage.getItem('inventory_data');
-            this.products = saved ? JSON.parse(saved) : [];
+            if (saved) {
+                this.products = JSON.parse(saved);
+            } else {
+                // Inisialisasi 10 data awal jika belum ada
+                this.products = [
+                    { id: 1, category_id: 1, category_name: 'ELEKTRONIK', product_name: 'Laptop Asus ExpertBook B1', sku: 'BRG-001', stock: 12, price: 12500000, supplier_name: 'PT. Asus Indo' },
+                    { id: 2, category_id: 1, category_name: 'ELEKTRONIK', product_name: 'Mouse Wireless Logi M220', sku: 'BRG-002', stock: 45, price: 195000, supplier_name: 'Logitech Distro' },
+                    { id: 3, category_id: 2, category_name: 'OFFICE', product_name: 'Kursi Kantor Ergo', sku: 'BRG-003', stock: 5, price: 1200000, supplier_name: 'Furniture Jaya' },
+                    { id: 4, category_id: 2, category_name: 'OFFICE', product_name: 'Meja Kerja Minimalis', sku: 'BRG-004', stock: 8, price: 2500000, supplier_name: 'Interior Kreasi' },
+                    { id: 5, category_id: 1, category_name: 'ELEKTRONIK', product_name: 'iPhone 15 Pro', sku: 'BRG-005', stock: 100, price: 15000000, supplier_name: 'Apple Official' },
+                    { id: 6, category_id: 3, category_name: 'PERKAKAS', product_name: 'Bor Listrik Makita', sku: 'BRG-006', stock: 15, price: 850000, supplier_name: 'Makita Power' },
+                    { id: 7, category_id: 3, category_name: 'PERKAKAS', product_name: 'Obeng Set Presisi', sku: 'BRG-007', stock: 60, price: 150000, supplier_name: 'Hardware Store' },
+                    { id: 8, category_id: 1, category_name: 'ELEKTRONIK', product_name: 'Monitor 24 Inch IPS', sku: 'BRG-008', stock: 25, price: 2100000, supplier_name: 'LG Indonesia' },
+                    { id: 9, category_id: 2, category_name: 'OFFICE', product_name: 'Kertas A4 80gr', sku: 'BRG-009', stock: 200, price: 55000, supplier_name: 'Paper Corp' },
+                    { id: 10, category_id: 3, category_name: 'PERKAKAS', product_name: 'Tang Kombinasi', sku: 'BRG-010', stock: 30, price: 75000, supplier_name: 'Handtools Indo' }
+                ];
+                this.saveToLocalStorage();
+            }
         },
         saveToLocalStorage() {
             localStorage.setItem('inventory_data', JSON.stringify(this.products));
