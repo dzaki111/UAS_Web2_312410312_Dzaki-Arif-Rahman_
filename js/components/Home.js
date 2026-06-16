@@ -44,7 +44,7 @@ export default {
             if (savedData) {
                 this.products = JSON.parse(savedData);
             } else {
-                // Inisialisasi 10 data default
+                // Inisialisasi 10 data default yang sinkron dengan Admin
                 this.products = [
                     { id: 1, sku: 'BRG-001', product_name: 'Laptop Asus ExpertBook B1', category_name: 'ELEKTRONIK', stock: 12, price: 12500000 },
                     { id: 2, sku: 'BRG-002', product_name: 'Mouse Wireless Logi M220', category_name: 'ELEKTRONIK', stock: 45, price: 195000 },
@@ -130,7 +130,7 @@ export default {
                                     <td class="p-4"><span class="bg-gray-950 border border-gray-800 px-2.5 py-1 rounded text-[10px] text-gray-400 uppercase font-mono">{{ product.category_name }}</span></td>
                                     <td class="p-4">
                                         <div class="flex items-center gap-2">
-                                            <span class="font-bold font-mono" :class="Number(product.stock) <= 20 ? 'text-amber-400' : 'text-white'">{{ product.stock }} Buah</span>
+                                            <span class="font-bold font-mono" :class="Number(product.stock) <= 20 ? 'text-amber-400' : 'white'">{{ product.stock }} Buah</span>
                                             <span v-if="Number(product.stock) <= 20" class="bg-amber-950/50 text-amber-400 text-[9px] px-1.5 py-0.5 rounded border border-amber-900 font-sans font-normal">Kritis</span>
                                         </div>
                                     </td>
