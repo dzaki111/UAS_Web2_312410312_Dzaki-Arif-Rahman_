@@ -67,7 +67,7 @@ export default {
                 localStorage.setItem('inventory_data', JSON.stringify(this.products));
             }
             this.addLog('Sinkronisasi database berhasil dimuat.');
-            this.addLog('Sistem terhubung ke penyimpanan lokal.');
+            this.addLog('Sistem terhubung.');
         }
     },
     template: `
