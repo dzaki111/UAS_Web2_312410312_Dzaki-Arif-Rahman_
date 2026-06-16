@@ -2,34 +2,34 @@ export default {
     data() {
         return {
             products: [],
-            categories: [],
+            categories: [
+                { id: 1, category_name: 'ELEKTRONIK' },
+                { id: 2, category_name: 'OFFICE' },
+                { id: 3, category_name: 'PERKAKAS' }
+            ],
             searchQuery: '',
             selectedCategory: '',
             statusFilter: '',
             currentPage: 1,
-            itemsPerPage: 5,
-            logs: [
-                { time: new Date().toLocaleTimeString('id-ID'), type: 'info', message: 'Sistem dimuat dari Local Storage...' }
-            ]
+            itemsPerPage: 5
         }
     },
     computed: {
         totalProducts() { return this.filteredProducts.length; },
         totalStock() { return this.filteredProducts.reduce((sum, item) => sum + Number(item.stock || 0), 0); },
         totalAsset() { return this.filteredProducts.reduce((sum, item) => sum + (Number(item.stock || 0) * Number(item.price || 0)), 0); },
-        totalCategoriesCount() { return this.categories.length || 1; },
+        totalCategoriesCount() { return this.categories.length; },
         filteredProducts() {
             return this.products.filter(product => {
-                const productName = product.product_name ? product.product_name.toLowerCase() : '';
-                const productSku = product.sku ? product.sku.toLowerCase() : '';
-                const categoryName = product.category_name || 'ELEKTRONIK';
-                const matchesSearch = productName.includes(this.searchQuery.toLowerCase()) || productSku.includes(this.searchQuery.toLowerCase());
-                const matchesCategory = this.selectedCategory === '' || categoryName === this.selectedCategory;
-                const matchesStatus = this.statusFilter === '' || (this.statusFilter === 'kritis' && Number(product.stock) <= 20);
+                const search = this.searchQuery.toLowerCase();
+                const matchesSearch = product.product_name.toLowerCase().includes(search) || product.sku.toLowerCase().includes(search);
+                const matchesCategory = this.selectedCategory === '' || product.category_name === this.selectedCategory;
+                let matchesStatus = true;
+                if (this.statusFilter === 'kritis') matchesStatus = Number(product.stock) <= 20;
                 return matchesSearch && matchesCategory && matchesStatus;
             });
         },
-        totalPages() { return Math.ceil(this.filteredProducts.length / this.itemsPerPage); },
+        totalPages() { return Math.ceil(this.filteredProducts.length / this.itemsPerPage) || 1; },
         paginatedProducts() {
             const start = (this.currentPage - 1) * this.itemsPerPage;
             return this.filteredProducts.slice(start, start + this.itemsPerPage);
@@ -45,24 +45,11 @@ export default {
     },
     methods: {
         loadData() {
-            const savedData = localStorage.getItem('inventory_app_data');
+            // Menggunakan kunci yang sama dengan Admin: 'inventory_data'
+            const savedData = localStorage.getItem('inventory_data');
             if (savedData) {
-                const parsed = JSON.parse(savedData);
-                this.products = parsed.products;
-                this.categories = parsed.categories;
-            } else {
-                this.products = [
-                    { id: 2, sku: 'BRG-002', product_name: 'Mouse Wireless Logi M220', category_name: 'ELEKTRONIK', stock: 45, price: 195000 },
-                    { id: 5, sku: 'BRG-005', product_name: 'iPhone', category_name: 'ELEKTRONIK', stock: 100, price: 15000000 },
-                    { id: 6, sku: 'BRG-006', product_name: 'HP 15 - 7530U - RX Vega 7 15W', category_name: 'ELEKTRONIK', stock: 50, price: 9000000 },
-                    { id: 1, sku: 'BRG-001', product_name: 'Laptop Asus ExpertBook B1', category_name: 'ELEKTRONIK', stock: 12, price: 12500000 }
-                ];
-                this.categories = ['ELEKTRONIK'];
-                this.saveToStorage();
+                this.products = JSON.parse(savedData);
             }
-        },
-        saveToStorage() {
-            localStorage.setItem('inventory_app_data', JSON.stringify({ products: this.products, categories: this.categories }));
         }
     },
     template: `
@@ -86,7 +73,7 @@ export default {
                         <span class="text-xs text-gray-400 whitespace-nowrap hidden sm:inline">Filter Sektor:</span>
                         <select v-model="selectedCategory" class="w-full md:w-48 bg-gray-950 border border-gray-800 rounded-lg px-3 py-2 text-xs text-gray-300 focus:outline-none focus:border-blue-500 font-mono transition">
                             <option value="">Semua Kategori</option>
-                            <option v-for="cat in categories" :key="cat" :value="cat">{{ cat }}</option>
+                            <option v-for="cat in categories" :key="cat.id" :value="cat.category_name">{{ cat.category_name }}</option>
                         </select>
                     </div>
                 </div>
@@ -108,43 +95,49 @@ export default {
                         <span class="text-2xl font-bold text-purple-400 font-mono">{{ totalCategoriesCount }} <span class="text-xs text-gray-500 font-sans font-normal">Sektor</span></span>
                     </div>
                 </div>
-                <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
-                    <div class="lg:col-span-3 bg-gray-900 border border-gray-800 rounded-xl overflow-hidden shadow-xl flex flex-col justify-between">
-                        <div>
-                            <div class="p-4 bg-gray-850/50 border-b border-gray-800 flex justify-between items-center">
-                                <h3 class="text-xs font-bold uppercase tracking-wider text-gray-300">Daftar Inventaris Terdaftar (Read-Only)</h3>
-                                <div class="flex gap-2">
-                                    <button @click="statusFilter = ''" :class="statusFilter === '' ? 'bg-blue-600 text-white' : 'bg-gray-800 text-gray-400'" class="text-[10px] px-2.5 py-1 rounded transition">Semua</button>
-                                    <button @click="statusFilter = 'kritis'" :class="statusFilter === 'kritis' ? 'bg-amber-600 text-white' : 'bg-gray-800 text-amber-400'" class="text-[10px] px-2.5 py-1 rounded transition">Stok Kritis</button>
-                                </div>
-                            </div>
-                            <div class="overflow-x-auto text-xs">
-                                <table class="w-full text-left border-collapse">
-                                    <thead class="bg-gray-800/40 uppercase font-semibold text-gray-400 border-b border-gray-800">
-                                        <tr>
-                                            <th class="p-4">Kode SKU</th>
-                                            <th class="p-4">Nama Komoditas</th>
-                                            <th class="p-4">Kategori Sektor</th>
-                                            <th class="p-4">Stok Gudang</th>
-                                            <th class="p-4">Harga Satuan</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody class="divide-y divide-gray-800 text-gray-300">
-                                        <tr v-for="product in paginatedProducts" :key="product.id" class="hover:bg-gray-800/30 transition">
-                                            <td class="p-4 font-mono text-blue-400 font-bold">{{ product.sku }}</td>
-                                            <td class="p-4 font-bold text-white text-sm">{{ product.product_name }}</td>
-                                            <td class="p-4"><span class="bg-gray-950 border border-gray-800 px-2.5 py-1 rounded text-[10px] text-gray-400 uppercase font-mono">{{ product.category_name || 'ELEKTRONIK' }}</span></td>
-                                            <td class="p-4">
-                                                <div class="flex items-center gap-2">
-                                                    <span class="font-bold font-mono" :class="Number(product.stock) <= 20 ? 'text-amber-400' : 'text-white'">{{ product.stock }} Buah</span>
-                                                    <span v-if="Number(product.stock) <= 20" class="bg-amber-950/50 text-amber-400 text-[9px] px-1.5 py-0.5 rounded border border-amber-900 font-sans font-normal">Kritis</span>
-                                                </div>
-                                            </td>
-                                            <td class="p-4 font-mono text-emerald-400 font-semibold">Rp {{ Number(product.price).toLocaleString('id-ID') }}</td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
+                <div class="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden shadow-xl">
+                    <div class="p-4 bg-gray-850/50 border-b border-gray-800 flex justify-between items-center">
+                        <h3 class="text-xs font-bold uppercase tracking-wider text-gray-300">Daftar Inventaris Terdaftar (Read-Only)</h3>
+                        <div class="flex gap-2">
+                            <button @click="statusFilter = ''" :class="statusFilter === '' ? 'bg-blue-600 text-white' : 'bg-gray-800 text-gray-400'" class="text-[10px] px-2.5 py-1 rounded transition">Semua</button>
+                            <button @click="statusFilter = 'kritis'" :class="statusFilter === 'kritis' ? 'bg-amber-600 text-white' : 'bg-gray-800 text-amber-400'" class="text-[10px] px-2.5 py-1 rounded transition">Stok Kritis</button>
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto text-xs">
+                        <table class="w-full text-left border-collapse">
+                            <thead class="bg-gray-800/40 uppercase font-semibold text-gray-400 border-b border-gray-800">
+                                <tr>
+                                    <th class="p-4">Kode SKU</th>
+                                    <th class="p-4">Nama Komoditas</th>
+                                    <th class="p-4">Kategori Sektor</th>
+                                    <th class="p-4">Stok Gudang</th>
+                                    <th class="p-4">Harga Satuan</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-800 text-gray-300">
+                                <tr v-for="product in paginatedProducts" :key="product.id" class="hover:bg-gray-800/30 transition">
+                                    <td class="p-4 font-mono text-blue-400 font-bold">{{ product.sku }}</td>
+                                    <td class="p-4 font-bold text-white text-sm">{{ product.product_name }}</td>
+                                    <td class="p-4"><span class="bg-gray-950 border border-gray-800 px-2.5 py-1 rounded text-[10px] text-gray-400 uppercase font-mono">{{ product.category_name }}</span></td>
+                                    <td class="p-4">
+                                        <div class="flex items-center gap-2">
+                                            <span class="font-bold font-mono" :class="Number(product.stock) <= 20 ? 'text-amber-400' : 'text-white'">{{ product.stock }} Buah</span>
+                                            <span v-if="Number(product.stock) <= 20" class="bg-amber-950/50 text-amber-400 text-[9px] px-1.5 py-0.5 rounded border border-amber-900 font-sans font-normal">Kritis</span>
+                                        </div>
+                                    </td>
+                                    <td class="p-4 font-mono text-emerald-400 font-semibold">Rp {{ Number(product.price).toLocaleString('id-ID') }}</td>
+                                </tr>
+                                <tr v-if="paginatedProducts.length === 0">
+                                    <td colspan="5" class="p-8 text-center text-gray-500 italic">Belum ada data tersedia.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="bg-gray-950/40 px-4 py-3 border-t border-gray-800 text-gray-500 flex justify-between items-center text-[11px]">
+                        <span>Halaman {{ currentPage }} dari {{ totalPages }}</span>
+                        <div class="flex gap-1">
+                            <button @click="currentPage--" :disabled="currentPage === 1" class="px-2 py-1 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded disabled:opacity-30 transition">Prev</button>
+                            <button @click="currentPage++" :disabled="currentPage >= totalPages" class="px-2 py-1 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded disabled:opacity-30 transition">Next</button>
                         </div>
                     </div>
                 </div>
