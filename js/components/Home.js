@@ -42,7 +42,9 @@ export default {
     methods: {
         addLog(message) {
             const now = new Date();
-            const timeString = now.toLocaleTimeString('id-ID', { hour12: false });
+            const timeString = now.getHours().toString().padStart(2, '0') + '.' + 
+                               now.getMinutes().toString().padStart(2, '0') + '.' + 
+                               now.getSeconds().toString().padStart(2, '0');
             this.logs.unshift({ id: Date.now(), time: timeString, msg: message });
         },
         loadData() {
